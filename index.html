@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta Pública — PMC Pereiro/CE</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1B3A6B;
+  --navy-dark: #0F2347;
+  --navy-light: #2A5298;
+  --green: #4A7A40;
+  --green-light: #5D9E51;
+  --gold: #C5A84B;
+  --gold-light: #E8C96A;
+  --amber: #C05C2A;
+  --purple: #7B5EA7;
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --text: #1A202C;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--navy-dark);
+  padding: 2.5rem 1.5rem 5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.025) 40px,
+    rgba(255,255,255,.025) 41px
+  );
+}
+.hero-inner { max-width: 680px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(197,168,75,.15); border: 1px solid rgba(197,168,75,.3);
+  color: var(--gold-light); font-size: 11px; font-weight: 600;
+  padding: 5px 12px; border-radius: 20px; letter-spacing: .05em;
+  text-transform: uppercase; margin-bottom: 1.25rem;
+}
+.hero-chip span { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.hero h1 { font-size: clamp(1.5rem, 5vw, 2.25rem); font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: .75rem; }
+.hero p { font-size: 14px; color: #9FB8D8; line-height: 1.7; max-width: 520px; }
+.hero-stats {
+  display: flex; gap: 24px; margin-top: 1.75rem; flex-wrap: wrap;
+}
+.hero-stat { display: flex; flex-direction: column; }
+.hero-stat strong { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--gold); }
+.hero-stat span { font-size: 11px; color: #7A9EC4; margin-top: 2px; }
+
+/* ── XP HUD (floating card) ── */
+.hud-wrap { max-width: 680px; margin: -2.5rem auto 0; padding: 0 1rem; position: relative; z-index: 10; }
+.hud {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 1.25rem 1.5rem; border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+.hud-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.hud-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.hud-xp { font-family: 'Space Mono', monospace; font-size: 1.25rem; font-weight: 700; color: var(--navy); }
+.hud-xp span { font-size: 12px; color: var(--text-light); font-weight: 400; }
+.xp-track {
+  background: #EEF2FF; border-radius: 20px; height: 8px; position: relative; overflow: hidden;
+}
+.xp-fill {
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+  border-radius: 20px; height: 100%;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+}
+.hud-missions { display: flex; gap: 6px; margin-top: 10px; }
+.m-pip {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: var(--border); transition: background .4s;
+}
+.m-pip.done { background: var(--green); }
+.m-pip.active { background: var(--gold); }
+
+/* ── MAIN LAYOUT ── */
+.main { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+/* ── MISSION CARDS ── */
+.mission {
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); margin-bottom: 1rem;
+  transition: border-color .2s, box-shadow .2s; overflow: hidden;
+}
+.mission.active { border-color: var(--green); box-shadow: 0 0 0 3px rgba(74,122,64,.1); }
+.mission.done { border-color: #CBD5E1; }
+.mission.locked { opacity: .55; }
+
+.m-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 1.1rem 1.25rem; cursor: default;
+}
+.m-ico {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.m-info { flex: 1; min-width: 0; }
+.m-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.m-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.m-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.xp-tag {
+  background: #FAEEDA; color: #633806;
+  font-size: 11px; font-weight: 600; font-family: 'Space Mono', monospace;
+  padding: 3px 8px; border-radius: 6px;
+}
+.m-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+  transition: all .3s; flex-shrink: 0;
+}
+.m-check.done { background: var(--green); border-color: var(--green); }
+.m-check svg { display: none; }
+.m-check.done svg { display: block; }
+
+.m-body { display: none; padding: 0 1.25rem 1.25rem; }
+.mission.active .m-body { display: block; }
+
+/* ── QUESTIONS ── */
+.q { margin-bottom: 1.25rem; }
+.q-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.q-label { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.5; }
+.q-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.opts { display: flex; flex-direction: column; gap: 7px; }
+.opt {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg); border: 1.5px solid transparent;
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 13px; color: var(--text);
+  cursor: pointer; transition: all .15s; text-align: left; width: 100%;
+}
+.opt:hover { border-color: var(--border); background: #EEF2FF; }
+.opt.sel { border-color: var(--green); background: #EAF3DE; color: #27500A; }
+.opt.sel .opt-box { background: var(--green); border-color: var(--green); }
+.opt.sel .opt-box::after { opacity: 1; }
+.opt-box {
+  width: 18px; height: 18px; border-radius: 5px; border: 2px solid #CBD5E1;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: all .2s; position: relative;
+}
+.opt-box::after {
+  content: '';
+  width: 8px; height: 5px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+  opacity: 0; transition: opacity .2s;
+}
+.opt.single .opt-box { border-radius: 50%; }
+.q-textarea {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 12px; font-size: 13px;
+  font-family: 'Sora', sans-serif; color: var(--text);
+  resize: vertical; min-height: 80px; transition: border-color .2s;
+}
+.q-textarea:focus { outline: none; border-color: var(--green); }
+
+.divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+/* ── NEXT BTN ── */
+.btn-next {
+  width: 100%; padding: 13px;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-next:hover { background: var(--navy-light); }
+.btn-next:active { transform: scale(.98); }
+.btn-next:disabled { opacity: .4; cursor: default; }
+.btn-next.last { background: var(--green); }
+.btn-next.last:hover { background: var(--green-light); }
+
+/* ── TOAST ── */
+#toast-zone { position: fixed; bottom: 1.5rem; right: 1rem; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  background: var(--navy-dark); color: #fff;
+  padding: 10px 14px; border-radius: 10px; font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+  animation: slideIn .3s ease; pointer-events: auto;
+  border-left: 3px solid var(--gold);
+}
+.toast .txp { color: var(--gold); font-weight: 700; font-family: 'Space Mono', monospace; }
+@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ── FINAL ── */
+.final {
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 2.5rem 1.5rem;
+  text-align: center; display: none;
+}
+.final.show { display: block; }
+.final-trophy {
+  width: 80px; height: 80px; background: var(--navy-dark);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 1.25rem;
+}
+.final h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+.final p { font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 420px; margin: 0 auto; }
+.final .xp-big { font-family: 'Space Mono', monospace; font-size: 2.5rem; font-weight: 700; color: var(--gold); display: block; margin: 1rem 0; }
+.achs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 1.5rem 0; }
+.ach { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--text-muted); }
+.final-note { margin-top: 1.5rem; font-size: 12px; color: var(--text-light); padding: 12px; background: var(--bg); border-radius: 8px; }
+
+/* ── ERR ── */
+.err-msg { background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #991B1B; margin-bottom: 12px; display: none; }
+.err-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-chip"><span></span> Consulta pública oficial</div>
+    <h1>Construa o futuro cultural de Pereiro/CE</h1>
+    <p>A Secretaria Municipal de Cultura e Turismo convida você a participar da elaboração do Plano Municipal de Cultura 2025–2035. Complete as missões abaixo — sua voz conta!</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>5</strong><span>missões</span></div>
+      <div class="hero-stat"><strong>500</strong><span>XP disponíveis</span></div>
+      <div class="hero-stat"><strong>10 anos</strong><span>de planejamento cultural</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="hud-wrap">
+  <div class="hud">
+    <div class="hud-row">
+      <span class="hud-label">Sua jornada</span>
+      <div class="hud-xp" id="xp-display">0 <span>/ 500 XP</span></div>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    <div class="hud-missions" id="pips"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="missions-zone"></div>
+  <div class="final" id="final-zone"></div>
+</div>
+
+<div id="toast-zone"></div>
+
+<script>
+const MISSIONS = [
+  {
+    id:'m1', icon:'🏠', color:'#1B3A6B', bg:'#EEF2FF',
+    title:'Quem é você?', sub:'Identificação — 3 perguntas', xp:80,
+    qs:[
+      { id:'bairro', type:'single', label:'Onde você mora?',
+        opts:['Sede urbana de Pereiro','Zona rural / Comunidade','Outro município próximo'] },
+      { id:'idade', type:'single', label:'Sua faixa etária:',
+        opts:['Até 17 anos','18 a 29 anos','30 a 44 anos','45 a 59 anos','60 anos ou mais'] },
+      { id:'relacao', type:'single', label:'Como você se relaciona com a cultura?',
+        opts:['Artista ou criador cultural','Artesão/artesã','Educador/educadora','Gestor público','Público / espectador','Outro'] }
+    ]
+  },
+  {
+    id:'m2', icon:'🎵', color:'#4A7A40', bg:'#EAF3DE',
+    title:'Sua vida cultural', sub:'Práticas e manifestações — 3 perguntas', xp:100,
+    qs:[
+      { id:'freq', type:'single', label:'Com que frequência você participa de atividades culturais em Pereiro?',
+        opts:['Nunca','Raramente (algumas vezes ao ano)','Às vezes (mensalmente)','Frequentemente (toda semana)'] },
+      { id:'atividades', type:'multi', label:'Quais atividades você aprecia ou pratica?',
+        hint:'Marque todas que quiser',
+        opts:['Festas juninas e forró','Reisado e festas religiosas','Artesanato (bordado, couro, cerâmica)','Literatura de cordel e repentistas','Artes visuais e fotografia','Teatro e dança','Gastronomia típica sertaneja','Cultura digital e redes sociais'] },
+      { id:'identidade', type:'text', label:'Qual manifestação cultural REPRESENTA a identidade de Pereiro pra você?',
+        hint:'Escreva com suas palavras — não há resposta certa ou errada!' }
+    ]
+  },
+  {
+    id:'m3', icon:'🏛️', color:'#C5A84B', bg:'#FBF6E6',
+    title:'Espaços e acesso', sub:'Infraestrutura cultural — 3 perguntas', xp:100,
+    qs:[
+      { id:'espacos', type:'multi', label:'Quais espaços culturais você conhece ou usa em Pereiro?',
+        opts:['Biblioteca pública','Praça central e espaços públicos','Igrejas e espaços religiosos','Escolas públicas municipais','Casas de shows e eventos','Associações comunitárias','Não há espaços adequados'] },
+      { id:'dificuldade', type:'multi', label:'Você tem dificuldade para acessar atividades culturais?',
+        opts:['Falta de transporte ou distância','Falta de recursos financeiros','Não há atividades perto de mim','Falta de informação','Questões de acessibilidade','Não tenho dificuldade'] },
+      { id:'falta', type:'single', label:'Qual espaço cultural FAZ MAIS FALTA em Pereiro?',
+        opts:['Casa de Cultura (espaço multiuso)','Biblioteca renovada e ampliada','Teatro ou auditório','Ateliê e espaço para artes','Espaço ao ar livre para eventos','Estúdio de gravação musical'] }
+    ]
+  },
+  {
+    id:'m4', icon:'🗺️', color:'#7B5EA7', bg:'#F3F0FA',
+    title:'Prioridades do povo', sub:'O que Pereiro precisa — 3 perguntas', xp:120,
+    qs:[
+      { id:'prioridade', type:'multi', label:'Qual a maior PRIORIDADE para a cultura nos próximos 10 anos?',
+        hint:'Escolha até 3 opções',
+        opts:['Preservar patrimônio e festas tradicionais','Apoiar artistas e artesãos locais','Criar ou melhorar espaços culturais','Levar cultura para escolas e jovens','Incentivar o turismo cultural','Fortalecer a identidade pereirense','Usar a cultura para gerar emprego e renda'] },
+      { id:'investimento', type:'single', label:'A Prefeitura deveria investir MAIS em cultura?',
+        opts:['Sim, muito mais','Sim, um pouco mais','O investimento atual está bom','Não sei informar'] },
+      { id:'risco', type:'text', label:'Existe alguma manifestação cultural que está desaparecendo em Pereiro?',
+        hint:'Se sim, qual? Se não souber, tudo bem deixar em branco.' }
+    ]
+  },
+  {
+    id:'m5', icon:'✍️', color:'#C05C2A', bg:'#FEF0E6',
+    title:'Sua voz no plano', sub:'Sugestões livres — 3 perguntas', xp:100,
+    qs:[
+      { id:'sugestao', type:'text', label:'Que ação concreta você sugere para valorizar a cultura de Pereiro?',
+        hint:'Pode ser simples — toda ideia conta!' },
+      { id:'reconhece', type:'text', label:'Tem algum artista, grupo ou manifestação que merece mais apoio?',
+        hint:'Conte para a Secult quem está fazendo cultura em Pereiro!' },
+      { id:'participar', type:'single', label:'Quer participar das próximas etapas do PMC?',
+        opts:['Sim, quero participar!','Talvez, me avisem','Não poderei participar'] }
+    ]
+  }
+];
+
+const TOTAL_XP = 500;
+let xp = 0;
+let done = 0;
+let ans = {};   /* ans[missionId][questionId] = value */
+MISSIONS.forEach(m => ans[m.id] = {});
+
+/* ── render pips ── */
+function renderPips() {
+  const z = document.getElementById('pips');
+  z.innerHTML = '';
+  MISSIONS.forEach((m, i) => {
+    const d = document.createElement('div');
+    d.className = 'm-pip' + (i < done ? ' done' : i === done ? ' active' : '');
+    z.appendChild(d);
+  });
+}
+
+/* ── update HUD ── */
+function updateHUD() {
+  document.getElementById('xp-display').innerHTML = xp + ' <span>/ ' + TOTAL_XP + ' XP</span>';
+  document.getElementById('xp-fill').style.width = Math.min(Math.round(xp / TOTAL_XP * 100), 100) + '%';
+  renderPips();
+}
+
+/* ── toast ── */
+function toast(msg, xpGain) {
+  const z = document.getElementById('toast-zone');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = '✓ ' + msg + (xpGain ? ' <span class="txp">+' + xpGain + ' XP</span>' : '');
+  z.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+/* ── save to storage ── */
+async function saveResponse(missionId) {
+  const key = 'pmc-resp-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+  const payload = {
+    ts: new Date().toISOString(),
+    mission: missionId,
+    data: ans[missionId]
+  };
+  try {
+    await window.storage.set(key, JSON.stringify(payload), true);
+  } catch(e) { /* silencioso */ }
+}
+
+async function saveFullResponse() {
+  const key = 'pmc-full-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+  const payload = {
+    ts: new Date().toISOString(),
+    xp: xp,
+    respostas: ans
+  };
+  try {
+    await window.storage.set(key, JSON.stringify(payload), true);
+  } catch(e) { /* silencioso */ }
+}
+
+/* ── build mission card ── */
+function buildCard(m, idx) {
+  const isDone = idx < done;
+  const isActive = idx === done;
+  const isLocked = idx > done;
+
+  const card = document.createElement('div');
+  card.className = 'mission' + (isDone ? ' done' : isActive ? ' active' : ' locked');
+  card.id = 'card-' + m.id;
+
+  /* HEAD */
+  const head = document.createElement('div');
+  head.className = 'm-head';
+  head.innerHTML = `
+    <div class="m-ico" style="background:${isDone||isActive ? m.bg : '#F1F5F9'}">${m.icon}</div>
+    <div class="m-info">
+      <div class="m-title">Missão ${idx+1}: ${m.title}</div>
+      <div class="m-sub">${m.sub}</div>
+    </div>
+    <div class="m-right">
+      <div class="xp-tag">${m.xp} XP</div>
+      <div class="m-check ${isDone ? 'done' : ''}" id="chk-${m.id}">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path d="M1 4l2.5 2.5L9 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>`;
+  card.appendChild(head);
+
+  /* BODY */
+  const body = document.createElement('div');
+  body.className = 'm-body';
+  body.id = 'body-' + m.id;
+
+  const errMsg = document.createElement('div');
+  errMsg.className = 'err-msg';
+  errMsg.id = 'err-' + m.id;
+  errMsg.textContent = 'Responda pelo menos a metade das perguntas para avançar.';
+  body.appendChild(errMsg);
+
+  m.qs.forEach((q, qi) => {
+    const qblock = document.createElement('div');
+    qblock.className = 'q';
+
+    const num = document.createElement('div');
+    num.className = 'q-num';
+    num.textContent = 'Pergunta ' + (qi + 1) + ' de ' + m.qs.length;
+    qblock.appendChild(num);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'q-label';
+    lbl.textContent = q.label;
+    qblock.appendChild(lbl);
+
+    if (q.hint) {
+      const hint = document.createElement('div');
+      hint.className = 'q-hint';
+      hint.textContent = q.hint;
+      qblock.appendChild(hint);
+    }
+
+    if (q.type === 'text') {
+      const ta = document.createElement('textarea');
+      ta.className = 'q-textarea';
+      ta.placeholder = 'Escreva aqui...';
+      ta.rows = 3;
+      ta.addEventListener('input', () => { ans[m.id][q.id] = ta.value; });
+      qblock.appendChild(ta);
+    } else {
+      const opts = document.createElement('div');
+      opts.className = 'opts';
+      q.opts.forEach((opt, oi) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt' + (q.type === 'single' ? ' single' : '');
+        btn.innerHTML = '<div class="opt-box"></div>' + opt;
+        btn.addEventListener('click', () => {
+          if (q.type === 'single') {
+            opts.querySelectorAll('.opt').forEach(b => b.classList.remove('sel'));
+            btn.classList.add('sel');
+            ans[m.id][q.id] = oi;
+          } else {
+            btn.classList.toggle('sel');
+            if (!Array.isArray(ans[m.id][q.id])) ans[m.id][q.id] = [];
+            const arr = ans[m.id][q.id];
+            const pos = arr.indexOf(oi);
+            if (pos >= 0) arr.splice(pos, 1); else arr.push(oi);
+          }
+        });
+        opts.appendChild(btn);
+      });
+      qblock.appendChild(opts);
+    }
+
+    body.appendChild(qblock);
+    if (qi < m.qs.length - 1) {
+      const div = document.createElement('div');
+      div.className = 'divider';
+      body.appendChild(div);
+    }
+  });
+
+  /* BTN */
+  const btn = document.createElement('button');
+  btn.className = 'btn-next' + (idx === MISSIONS.length - 1 ? ' last' : '');
+  btn.style.marginTop = '1.25rem';
+  btn.textContent = idx < MISSIONS.length - 1 ? 'Concluir missão →' : 'Entregar minha participação!';
+  btn.addEventListener('click', () => completeMission(m, idx, btn));
+  body.appendChild(btn);
+
+  card.appendChild(body);
+  return card;
+}
+
+/* ── complete mission ── */
+async function completeMission(m, idx, btn) {
+  /* validar mínimo 50% respondidas */
+  let answered = 0;
+  m.qs.forEach(q => {
+    const a = ans[m.id][q.id];
+    if (q.type === 'text' && a && a.trim()) answered++;
+    else if (q.type !== 'text' && (Array.isArray(a) ? a.length > 0 : a !== undefined)) answered++;
+  });
+  const minReq = Math.ceil(m.qs.length * 0.5);
+  const err = document.getElementById('err-' + m.id);
+  if (answered < minReq) {
+    err.classList.add('show');
+    setTimeout(() => err.classList.remove('show'), 3000);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  await saveResponse(m.id);
+
+  xp += m.xp;
+  done = idx + 1;
+  updateHUD();
+
+  /* mark done */
+  const card = document.getElementById('card-' + m.id);
+  card.className = 'mission done';
+  document.getElementById('chk-' + m.id).classList.add('done');
+  document.getElementById('body-' + m.id).style.display = 'none';
+
+  toast('Missão "' + m.title + '" concluída!', m.xp);
+
+  if (done >= MISSIONS.length) {
+    await saveFullResponse();
+    setTimeout(showFinal, 600);
+    return;
+  }
+
+  /* activate next */
+  renderMissions();
+  setTimeout(() => {
+    const next = document.getElementById('card-' + MISSIONS[done].id);
+    if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+}
+
+/* ── render all missions ── */
+function renderMissions() {
+  const z = document.getElementById('missions-zone');
+  z.innerHTML = '';
+  MISSIONS.forEach((m, i) => z.appendChild(buildCard(m, i)));
+}
+
+/* ── final screen ── */
+function showFinal() {
+  document.getElementById('missions-zone').innerHTML = '';
+  const f = document.getElementById('final-zone');
+  f.className = 'final show';
+  f.innerHTML = `
+    <div class="final-trophy">🏆</div>
+    <h2>Participação completa!</h2>
+    <span class="xp-big">${xp} XP</span>
+    <p>Você completou todas as missões e ajudou a construir o futuro cultural de Pereiro/CE.<br>
+    A Secretaria Municipal de Cultura e Turismo agradece imensamente!</p>
+    <div class="achs">
+      <div class="ach">🏠 Identificado</div>
+      <div class="ach">🎵 Guardião da cultura</div>
+      <div class="ach">🏛️ Mapeador de espaços</div>
+      <div class="ach">🗺️ Voz do povo</div>
+      <div class="ach">✍️ Agente cultural</div>
+    </div>
+    <div class="final-note">
+      Suas respostas foram registradas com segurança e serão analisadas pela Secult de Pereiro.<br>
+      Fique de olho nas próximas etapas da Consulta Pública nas redes sociais da Prefeitura.
+    </div>`;
+  f.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ── init ── */
+updateHUD();
+renderMissions();
+</script>
+</body>
+</html>
